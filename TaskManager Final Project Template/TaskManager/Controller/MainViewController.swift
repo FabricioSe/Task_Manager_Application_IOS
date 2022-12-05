@@ -383,6 +383,9 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                     if httpStatusCode == 200 {
                     
                         DataSource.allTasks.remove(at: indexPath.row)
+                        
+                        self.displayedTasks.remove(at: indexPath.row)
+                        
                         tableView.deleteRows(at: [indexPath], with: .bottom)
 
                     }
@@ -436,6 +439,9 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                     
                     if httpStatusCode == 200 {
                         DataSource.allTasks[indexPath.row].done = !DataSource.allTasks[indexPath.row].done
+                       
+                        self.displayedTasks[indexPath.row].done = !self.displayedTasks[indexPath.row].done
+                        
                         tableView.reloadRows(at: [indexPath], with: .bottom)
                     }
 

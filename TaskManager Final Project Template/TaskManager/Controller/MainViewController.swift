@@ -25,8 +25,8 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
         let filterIndex = segControlTaskFilter.selectedSegmentIndex
         self.displayedTasks = []
         switch filterIndex{
-            
         case 1:
+            //Done Tasks
             for task in DataSource.allTasks {
                 if task.done == true{
                     self.displayedTasks.append(task)
@@ -35,13 +35,14 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
             break
             
         case 2:
+            //Pending Tasks
             for task in DataSource.allTasks {
                 if task.done == false{
                     self.displayedTasks.append(task)
                 }
             }
             break
-            
+            //All Taskss
         default:
             self.displayedTasks = DataSource.allTasks
             break
@@ -52,11 +53,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
        
     }
     
-    
-    private func filterTask(){
-        
-        
-    }
     
     
     private var timer = Timer()
@@ -105,8 +101,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     
     func initialize() {
         
-        
-        
         lblLoggedUserName.text = "Hi \(Session.loggedUser!.name.capitalized)"
         btnUserSelection.text = Session.loggedUser!.name.uppercased()
 
@@ -118,7 +112,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
         
         // register for the nib
         tableView.register(UINib(nibName: TaskTableViewCell.identifier, bundle: nil), forCellReuseIdentifier: TaskTableViewCell.identifier)
-
         
         // get the current user tasks
         userListViewController(selectedUser: AppContext.selectedUser!)
@@ -168,7 +161,7 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
             DispatchQueue.main.async {
 
                 self.busy = false
-
+                
                 if httpStatusCode == 200 {
                     DataSource.allUsers = AllUsers.decode(json: response)!.allUsers
                     print(DataSource.allUsers)
@@ -257,6 +250,9 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                         if httpStatusCode == 200 {
 
                             DataSource.allTasks = AllTasks.decode(json: response)!.allTasks
+                            // HERE
+                            self.displayedTasks = DataSource.allTasks
+                            
                             self.tableView.reloadData()
                             
                         } else {
@@ -298,6 +294,9 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                                         DataSource.allTasks.append(task)
                                     }
                                 }
+                                // HERE
+                                self.displayedTasks = DataSource.allTasks
+                                
                                 print(DataSource.allTasks)
                                 self.tableView.reloadData()
                                 
@@ -344,7 +343,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
         cell.setContent(task: displayedTasks[indexPath.row])
         
         
-        
         return cell
         
     }
@@ -363,7 +361,8 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
-        let selectedTask = displayedTasks[indexPath.row]
+        let selectedTask = DataSource.allTasks[indexPath.row]
+        //let selectedTask = displayedTasks[indexPath.row]
         
         if Session.loggedUser!.uid != selectedTask.createdByUid {
             return nil
@@ -387,7 +386,7 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                         tableView.deleteRows(at: [indexPath], with: .bottom)
 
                     }
-
+                    
                     self.busy = false
                     complete(true)
 

@@ -15,50 +15,40 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     @IBOutlet var lblLoggedUserName : UILabel!
     @IBOutlet var actBusy : UIActivityIndicatorView!
     @IBOutlet var tableView : UITableView!
-
     @IBOutlet weak var segControlTaskFilter: UISegmentedControl!
     
-    var displayedTasks = [TaskModel]()
+    private var timer = Timer()
+    private var timerTimes = 0
     
-    @IBAction func segControlTaskFilterValueChanged(_ sender: UISegmentedControl) {
+    var refreshControl = UIRefreshControl()
+    
+    var displayedTasks = DataSource.allTasks
+    
+    @IBAction func segControlTaskFilterValueChanged(_ sender: UISegmentedControl? ) {
         
-        let filterIndex = segControlTaskFilter.selectedSegmentIndex
         self.displayedTasks = []
-        switch filterIndex{
-        case 1:
+        if segControlTaskFilter.selectedSegmentIndex == 0 {
+            // Display all tasks
+            displayedTasks = DataSource.allTasks
+        } else if segControlTaskFilter.selectedSegmentIndex == 1{
             //Done Tasks
             for task in DataSource.allTasks {
                 if task.done == true{
                     self.displayedTasks.append(task)
                 }
             }
-            break
-            
-        case 2:
+        } else if segControlTaskFilter.selectedSegmentIndex == 2 {
             //Pending Tasks
             for task in DataSource.allTasks {
                 if task.done == false{
                     self.displayedTasks.append(task)
                 }
             }
-            break
-            //All Taskss
-        default:
-            self.displayedTasks = DataSource.allTasks
-            break
         }
-        
         
         tableView.reloadData()
        
     }
-    
-    
-    
-    private var timer = Timer()
-    private var timerTimes = 0
-    
-    var refreshControl = UIRefreshControl()
 
     
     private var busy : Bool = false {
@@ -78,7 +68,7 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        displayedTasks = DataSource.allTasks
+
         customizeView()
         
         initialize()
@@ -110,14 +100,16 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
         refreshControl.addTarget(self, action: #selector(tableRefreshControl), for: UIControl.Event.valueChanged)
         tableView.addSubview(refreshControl)
         
-        // register for the nib
-        tableView.register(UINib(nibName: TaskTableViewCell.identifier, bundle: nil), forCellReuseIdentifier: TaskTableViewCell.identifier)
-        
         // get the current user tasks
         userListViewController(selectedUser: AppContext.selectedUser!)
         
         self.timer = Timer.scheduledTimer(timeInterval: 3.0, target: self, selector:#selector(self.timeToShake) , userInfo: nil, repeats: true)
 
+        // register for the nib
+        tableView.register(UINib(nibName: TaskTableViewCell.identifier, bundle: nil), forCellReuseIdentifier: TaskTableViewCell.identifier)
+        
+        tableView.delegate = self
+        tableView.dataSource = self
         
     }
 
@@ -234,6 +226,7 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
             self.btnUserSelection.text = AppContext.selectedUser!.name.uppercased()
 
             DataSource.allTasks = []
+            self.displayedTasks = []
             self.tableView.reloadData()
 
 
@@ -291,13 +284,12 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                                 
                                 for task in tasks {
                                     if task.assignedToUid == AppContext.selectedUser!.uid {
-                                        DataSource.allTasks.append(task)
+                                        self.displayedTasks.append(task)
                                     }
                                 }
                                 // HERE
-                                self.displayedTasks = DataSource.allTasks
                                 
-                                print(DataSource.allTasks)
+                                print(self.displayedTasks)
                                 self.tableView.reloadData()
                                 
                             } else {
@@ -361,8 +353,8 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
-        let selectedTask = DataSource.allTasks[indexPath.row]
-        //let selectedTask = displayedTasks[indexPath.row]
+        //let selectedTask = DataSource.allTasks[indexPath.row]
+        let selectedTask = displayedTasks[indexPath.row]
         
         if Session.loggedUser!.uid != selectedTask.createdByUid {
             return nil
@@ -382,9 +374,24 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
 
                     if httpStatusCode == 200 {
                     
-                        DataSource.allTasks.remove(at: indexPath.row)
-                        tableView.deleteRows(at: [indexPath], with: .bottom)
+                        //DataSource.allTasks.remove(at: indexPath.row)
+                        //tableView.deleteRows(at: [indexPath], with: .bottom)
+                        
+                        for index in 0..<DataSource.allTasks.count {
+                            if DataSource.allTasks[index].taskUid == selectedTask.taskUid {
+                                DataSource.allTasks.remove(at: index)
+                                break
+                            }
+                        }
+                        for index in 0..<self.displayedTasks.count{
+                            if self.displayedTasks[index].taskUid == selectedTask.taskUid{
+                                self.displayedTasks[index].done = !self.displayedTasks[index].done
+                                break
+                            }
+                        }
 
+                        //tableView.deleteRows(at: [indexPath], with: .bottom)
+                        self.segControlTaskFilterValueChanged(nil)
                     }
                     
                     self.busy = false
@@ -434,8 +441,24 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
 
                 DispatchQueue.main.async {
                     
+                    // We need to update the table by UUID not by index
+                    
                     if httpStatusCode == 200 {
-                        DataSource.allTasks[indexPath.row].done = !DataSource.allTasks[indexPath.row].done
+                        //DataSource.allTasks[indexPath.row].done = !DataSource.allTasks[indexPath.row].done
+                        //tableView.reloadRows(at: [indexPath], with: .bottom)
+                        
+                        for index in 0..<DataSource.allTasks.count {
+                            if DataSource.allTasks[index].taskUid == selectedTask.taskUid {
+                                DataSource.allTasks[index].done = !DataSource.allTasks[index].done
+                            }
+                        }
+                        
+                        for index in 0..<self.displayedTasks.count {
+                            if self.displayedTasks[index].taskUid == selectedTask.taskUid {
+                                self.displayedTasks[index].done = !self.displayedTasks[index].done
+                            }
+                        }
+                        self.segControlTaskFilterValueChanged(nil)
                         tableView.reloadRows(at: [indexPath], with: .bottom)
                     }
 

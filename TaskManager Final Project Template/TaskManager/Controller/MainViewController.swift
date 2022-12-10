@@ -27,11 +27,17 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     @IBAction func segControlTaskFilterValueChanged(_ sender: UISegmentedControl? ) {
         
         self.displayedTasks = []
+<<<<<<< Updated upstream
         if segControlTaskFilter.selectedSegmentIndex == 0 {
             // Display all tasks
             displayedTasks = DataSource.allTasks
         } else if segControlTaskFilter.selectedSegmentIndex == 1{
             //Done Tasks
+=======
+        switch filterIndex{
+        
+        case 1:
+>>>>>>> Stashed changes
             for task in DataSource.allTasks {
                 if task.done == true{
                     self.displayedTasks.append(task)

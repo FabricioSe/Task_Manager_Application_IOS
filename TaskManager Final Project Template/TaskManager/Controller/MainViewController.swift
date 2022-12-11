@@ -27,17 +27,11 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
     @IBAction func segControlTaskFilterValueChanged(_ sender: UISegmentedControl? ) {
         
         self.displayedTasks = []
-<<<<<<< Updated upstream
         if segControlTaskFilter.selectedSegmentIndex == 0 {
             // Display all tasks
             displayedTasks = DataSource.allTasks
         } else if segControlTaskFilter.selectedSegmentIndex == 1{
             //Done Tasks
-=======
-        switch filterIndex{
-        
-        case 1:
->>>>>>> Stashed changes
             for task in DataSource.allTasks {
                 if task.done == true{
                     self.displayedTasks.append(task)
@@ -380,7 +374,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
 
                     if httpStatusCode == 200 {
                     
-<<<<<<< HEAD
                         //DataSource.allTasks.remove(at: indexPath.row)
                         //tableView.deleteRows(at: [indexPath], with: .bottom)
                         
@@ -396,13 +389,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                                 break
                             }
                         }
-=======
-                        DataSource.allTasks.remove(at: indexPath.row)
-                        
-                        self.displayedTasks.remove(at: indexPath.row)
-                        
-                        tableView.deleteRows(at: [indexPath], with: .bottom)
->>>>>>> 4fbcddec4206b47d877c53df5823b9325bc9418c
 
                         //tableView.deleteRows(at: [indexPath], with: .bottom)
                         self.segControlTaskFilterValueChanged(nil)
@@ -473,10 +459,6 @@ class MainViewController: UIViewController, UsersListViewControllerDelegate, UIT
                             }
                         }
                         self.segControlTaskFilterValueChanged(nil)
-                        DataSource.allTasks[indexPath.row].done = !DataSource.allTasks[indexPath.row].done
-                       
-                        self.displayedTasks[indexPath.row].done = !self.displayedTasks[indexPath.row].done
-                        
                         tableView.reloadRows(at: [indexPath], with: .bottom)
                     }
 
